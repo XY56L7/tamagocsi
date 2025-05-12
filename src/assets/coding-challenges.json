@@ -1,0 +1,44 @@
+{
+    "challenges": [
+        {
+            "id": 1,
+            "title": "Összeadás",
+            "description": "Írj egy függvényt, ami összead két számot!",
+            "difficulty": "easy",
+            "language": "python",
+            "code": "def add_numbers(a, b):\n    # Írd ide a megoldást\n    pass",
+            "testCases": [
+                {
+                    "input": "add_numbers(2, 3)",
+                    "expectedOutput": "5"
+                },
+                {
+                    "input": "add_numbers(-1, 1)",
+                    "expectedOutput": "0"
+                }
+            ],
+            "experienceReward": 10,
+            "solution": "def add_numbers(a, b):\n    return a + b"
+        },
+        {
+            "id": 2,
+            "title": "Faktoriális",
+            "description": "Írj egy függvényt, ami kiszámolja egy szám faktoriálisát!",
+            "difficulty": "medium",
+            "language": "python",
+            "code": "def factorial(n):\n    # Írd ide a megoldást\n    pass",
+            "testCases": [
+                {
+                    "input": "factorial(5)",
+                    "expectedOutput": "120"
+                },
+                {
+                    "input": "factorial(0)",
+                    "expectedOutput": "1"
+                }
+            ],
+            "experienceReward": 20,
+            "solution": "def factorial(n):\n    if n == 0:\n        return 1\n    return n * factorial(n-1)"
+        }
+    ]
+} 
