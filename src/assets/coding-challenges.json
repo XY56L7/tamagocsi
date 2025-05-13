@@ -3,7 +3,7 @@
         {
             "id": 1,
             "title": "Összeadás",
-            "description": "Írj egy függvényt, ami összead két számot!",
+            "description": "Írj egy függvényt, ami összeadja a két kapott paramétert és visszaadja az eredményt!",
             "difficulty": "easy",
             "language": "python",
             "code": "def add_numbers(a, b):\n    # Írd ide a megoldást\n    pass",
@@ -22,23 +22,183 @@
         },
         {
             "id": 2,
-            "title": "Faktoriális",
-            "description": "Írj egy függvényt, ami kiszámolja egy szám faktoriálisát!",
-            "difficulty": "medium",
+            "title": "Szófordító",
+            "description": "Írj egy függvényt, amely megfordítja a paraméterként kapott szót!",
+            "difficulty": "easy",
             "language": "python",
-            "code": "def factorial(n):\n    # Írd ide a megoldást\n    pass",
+            "code": "def reverse_string(text):\n    # Írd ide a megoldást\n    pass",
             "testCases": [
                 {
-                    "input": "factorial(5)",
-                    "expectedOutput": "120"
+                    "input": "reverse_string('hello')",
+                    "expectedOutput": "'olleh'"
                 },
                 {
-                    "input": "factorial(0)",
-                    "expectedOutput": "1"
+                    "input": "reverse_string('python')",
+                    "expectedOutput": "'nohtyp'"
+                }
+            ],
+            "experienceReward": 15,
+            "solution": "def reverse_string(text):\n    return text[::-1]"
+        },
+        {
+            "id": 3,
+            "title": "Páros számok",
+            "description": "Készíts egy függvényt, amely kiválogatja a páros számokat egy listából és visszaadja őket egy új listában!",
+            "difficulty": "medium",
+            "language": "python",
+            "code": "def even_numbers(numbers):\n    # Írd ide a megoldást\n    pass",
+            "testCases": [
+                {
+                    "input": "even_numbers([1, 2, 3, 4, 5, 6])",
+                    "expectedOutput": "[2, 4, 6]"
+                },
+                {
+                    "input": "even_numbers([7, 9, 11])",
+                    "expectedOutput": "[]"
                 }
             ],
             "experienceReward": 20,
-            "solution": "def factorial(n):\n    if n == 0:\n        return 1\n    return n * factorial(n-1)"
+            "solution": "def even_numbers(numbers):\n    return [num for num in numbers if num % 2 == 0]"
+        },
+        {
+            "id": 4,
+            "title": "Összeadás (JavaScript)",
+            "description": "Írj egy függvényt, ami összeadja a két kapott paramétert és visszaadja az eredményt!",
+            "difficulty": "easy",
+            "language": "javascript",
+            "code": "function addNumbers(a, b) {\n    // Írd ide a megoldást\n}",
+            "testCases": [
+                {
+                    "input": "addNumbers(2, 3)",
+                    "expectedOutput": "5"
+                },
+                {
+                    "input": "addNumbers(-1, 1)",
+                    "expectedOutput": "0"
+                }
+            ],
+            "experienceReward": 10,
+            "solution": "function addNumbers(a, b) {\n    return a + b;\n}"
+        },
+        {
+            "id": 5,
+            "title": "Szófordító (JavaScript)",
+            "description": "Írj egy függvényt, amely megfordítja a paraméterként kapott szót!",
+            "difficulty": "easy",
+            "language": "javascript",
+            "code": "function reverseString(text) {\n    // Írd ide a megoldást\n}",
+            "testCases": [
+                {
+                    "input": "reverseString('hello')",
+                    "expectedOutput": "'olleh'"
+                },
+                {
+                    "input": "reverseString('javascript')",
+                    "expectedOutput": "'tpircsavaj'"
+                }
+            ],
+            "experienceReward": 15,
+            "solution": "function reverseString(text) {\n    return text.split('').reverse().join('');\n}"
+        },
+        {
+            "id": 6,
+            "title": "Páros számok (JavaScript)",
+            "description": "Készíts egy függvényt, amely kiválogatja a páros számokat egy tömbből és visszaadja őket egy új tömbben!",
+            "difficulty": "medium",
+            "language": "javascript",
+            "code": "function evenNumbers(numbers) {\n    // Írd ide a megoldást\n}",
+            "testCases": [
+                {
+                    "input": "evenNumbers([1, 2, 3, 4, 5, 6])",
+                    "expectedOutput": "[2, 4, 6]"
+                },
+                {
+                    "input": "evenNumbers([7, 9, 11])",
+                    "expectedOutput": "[]"
+                }
+            ],
+            "experienceReward": 20,
+            "solution": "function evenNumbers(numbers) {\n    return numbers.filter(num => num % 2 === 0);\n}"
+        },
+        {
+            "id": 7,
+            "title": "Összeadás (Java)",
+            "description": "Írj egy metódust, ami összeadja a két kapott paramétert és visszaadja az eredményt!",
+            "difficulty": "easy",
+            "language": "java",
+            "code": "public class Calculator {\n    public static int addNumbers(int a, int b) {\n        // Írd ide a megoldást\n        return 0;\n    }\n}",
+            "testCases": [
+                {
+                    "input": "Calculator.addNumbers(2, 3)",
+                    "expectedOutput": "5"
+                },
+                {
+                    "input": "Calculator.addNumbers(-1, 1)",
+                    "expectedOutput": "0"
+                }
+            ],
+            "experienceReward": 10,
+            "solution": "public class Calculator {\n    public static int addNumbers(int a, int b) {\n        return a + b;\n    }\n}"
+        },
+        {
+            "id": 8,
+            "title": "Szófordító (Java)",
+            "description": "Írj egy metódust, amely megfordítja a paraméterként kapott szót!",
+            "difficulty": "easy",
+            "language": "java",
+            "code": "public class StringUtil {\n    public static String reverseString(String text) {\n        // Írd ide a megoldást\n        return \"\";\n    }\n}",
+            "testCases": [
+                {
+                    "input": "StringUtil.reverseString(\"hello\")",
+                    "expectedOutput": "\"olleh\""
+                },
+                {
+                    "input": "StringUtil.reverseString(\"java\")",
+                    "expectedOutput": "\"avaj\""
+                }
+            ],
+            "experienceReward": 15,
+            "solution": "public class StringUtil {\n    public static String reverseString(String text) {\n        return new StringBuilder(text).reverse().toString();\n    }\n}"
+        },
+        {
+            "id": 9,
+            "title": "Összeadás (C++)",
+            "description": "Írj egy függvényt, ami összeadja a két kapott paramétert és visszaadja az eredményt!",
+            "difficulty": "easy",
+            "language": "cpp",
+            "code": "int addNumbers(int a, int b) {\n    // Írd ide a megoldást\n    return 0;\n}",
+            "testCases": [
+                {
+                    "input": "addNumbers(2, 3)",
+                    "expectedOutput": "5"
+                },
+                {
+                    "input": "addNumbers(-1, 1)",
+                    "expectedOutput": "0"
+                }
+            ],
+            "experienceReward": 10,
+            "solution": "int addNumbers(int a, int b) {\n    return a + b;\n}"
+        },
+        {
+            "id": 10,
+            "title": "Összeadás (C#)",
+            "description": "Írj egy metódust, ami összeadja a két kapott paramétert és visszaadja az eredményt!",
+            "difficulty": "easy",
+            "language": "csharp",
+            "code": "public class Calculator\n{\n    public static int AddNumbers(int a, int b)\n    {\n        // Írd ide a megoldást\n        return 0;\n    }\n}",
+            "testCases": [
+                {
+                    "input": "Calculator.AddNumbers(2, 3)",
+                    "expectedOutput": "5"
+                },
+                {
+                    "input": "Calculator.AddNumbers(-1, 1)",
+                    "expectedOutput": "0"
+                }
+            ],
+            "experienceReward": 10,
+            "solution": "public class Calculator\n{\n    public static int AddNumbers(int a, int b)\n    {\n        return a + b;\n    }\n}"
         }
     ]
 } 

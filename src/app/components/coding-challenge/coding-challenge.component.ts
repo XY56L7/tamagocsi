@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CodingChallengesService } from '../../../services/coding-challenges.service';
 import { TamagocsiService } from '../../../services/tamagocsi.service';
-import { CodingChallenge } from '../../../coding-challenge.model';
+import { CodingChallenge, CodingLanguage } from '../../../coding-challenge.model';
+import { LanguagePreferenceService } from '../../../services/language-preference.service';
 
 @Component({
   selector: 'app-coding-challenge',
@@ -11,80 +12,114 @@ import { CodingChallenge } from '../../../coding-challenge.model';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="code-challenge-container">
-      <div class="challenge-display">
+      <div class="challenge-display" *ngIf="!isLoading; else loadingTemplate">
         <div class="display-header">
-          <h5 class="challenge-title">{{ currentChallenge?.title || 'Loading...' }}</h5>
-          <div class="challenge-badges">
+          <h5 class="challenge-title">{{ currentChallenge?.title || 'Válassz programozási nyelvet' }}</h5>
+          <div class="challenge-badges" *ngIf="currentChallenge">
             <span class="difficulty-badge" [ngClass]="getDifficultyClass()">{{ currentChallenge?.difficulty }}</span>
             <span class="language-badge">{{ currentChallenge?.language }}</span>
           </div>
         </div>
         
-        <div class="challenge-description-box">
-          <p class="description-text">{{ currentChallenge?.description }}</p>
-          <span class="xp-reward" *ngIf="currentChallenge">
-            +{{ currentChallenge.experienceReward }}XP
-          </span>
+        <div class="language-selector">
+          <p class="selector-title">Programozási nyelv:</p>
+          <div class="language-buttons">
+            <button
+              *ngFor="let language of availableLanguages"
+              class="language-button"
+              [class.active]="language === selectedLanguage"
+              (click)="selectLanguage(language)"
+            >
+              {{ getLanguageEmoji(language) }} {{ getLanguageName(language) }}
+            </button>
+          </div>
         </div>
         
-        <div class="challenge-content">
-          <div class="code-sections">
-            <div class="code-problem">
-              <div class="pixel-panel-header">
-                <div class="panel-title">Kezdeti kód</div>
-              </div>
-              <pre class="code-block"><code>{{ currentChallenge?.code }}</code></pre>
-            </div>
-            
-            <div class="code-solution">
-              <div class="pixel-panel-header">
-                <div class="panel-title">Megoldásod</div>
-              </div>
-              <textarea
-                class="code-textarea"
-                [(ngModel)]="userSolution"
-                placeholder="Írd ide a megoldásod..."
-              ></textarea>
-              
-              <div class="result-message success" *ngIf="showSuccess">
-                <span class="result-icon">✓</span> Helyes megoldás!
-              </div>
-              <div class="result-message error" *ngIf="showError">
-                <span class="result-icon">✗</span> Helytelen megoldás
-              </div>
-            </div>
+        <ng-container *ngIf="currentChallenge; else noChallenge">
+          <div class="challenge-description-box">
+            <p class="description-text">{{ currentChallenge?.description }}</p>
+            <span class="xp-reward">
+              +{{ currentChallenge.experienceReward }}XP
+            </span>
           </div>
           
-          <div class="test-panel">
-            <div class="pixel-panel-header">
-              <div class="panel-title">Tesztesetek</div>
-            </div>
-            <div class="test-cases-container">
-              <div class="test-case" *ngFor="let test of currentChallenge?.testCases">
-                <div class="test-input">
-                  <span class="test-label">IN:</span>
-                  <code class="test-code">{{ test.input }}</code>
+          <div class="challenge-content">
+            <div class="code-sections">
+              <div class="code-problem">
+                <div class="pixel-panel-header">
+                  <div class="panel-title">Kezdeti kód</div>
                 </div>
-                <div class="test-output">
-                  <span class="test-label">OUT:</span>
-                  <code class="test-code">{{ test.expectedOutput }}</code>
+                <pre class="code-block"><code>{{ currentChallenge?.code }}</code></pre>
+              </div>
+              
+              <div class="code-solution">
+                <div class="pixel-panel-header">
+                  <div class="panel-title">Megoldásod</div>
+                </div>
+                <textarea
+                  class="code-textarea"
+                  [(ngModel)]="userSolution"
+                  placeholder="Írd ide a megoldásod..."
+                ></textarea>
+                
+                <div class="result-message success" *ngIf="showSuccess">
+                  <span class="result-icon">✓</span> Helyes megoldás!
+                </div>
+                <div class="result-message error" *ngIf="showError">
+                  <span class="result-icon">✗</span> Helytelen megoldás
                 </div>
               </div>
             </div>
             
-            <div class="test-actions">
-              <div class="action-buttons">
-                <button class="pixel-button check-btn" (click)="submitSolution()">
-                  Ellenőrzés
-                </button>
-                <button class="pixel-button next-btn" (click)="getNewChallenge()">
-                  Új feladat
-                </button>
+            <div class="test-panel">
+              <div class="pixel-panel-header">
+                <div class="panel-title">Tesztesetek</div>
+              </div>
+              <div class="test-cases-container">
+                <div class="test-case" *ngFor="let test of currentChallenge?.testCases">
+                  <div class="test-input">
+                    <span class="test-label">IN:</span>
+                    <pre class="test-code">{{ test.input }}</pre>
+                  </div>
+                  <div class="test-output">
+                    <span class="test-label">OUT:</span>
+                    <pre class="test-code">{{ test.expectedOutput }}</pre>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="test-actions">
+                <div class="action-buttons">
+                  <button class="pixel-button check-btn" (click)="submitSolution()">
+                    Ellenőrzés
+                  </button>
+                  <button class="pixel-button next-btn" (click)="getNewChallenge()">
+                    Új feladat
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ng-container>
+        
+        <ng-template #noChallenge>
+          <div class="no-challenge">
+            <div class="message">
+              <p>Nincs elérhető feladat a kiválasztott nyelvhez.</p>
+              <p>Kérjük, válassz másik programozási nyelvet!</p>
+            </div>
+          </div>
+        </ng-template>
       </div>
+      
+      <ng-template #loadingTemplate>
+        <div class="loading-container">
+          <div class="loading-message">
+            <div class="pixel-spinner"></div>
+            <p>Feladat betöltése...</p>
+          </div>
+        </div>
+      </ng-template>
     </div>
   `,
   styles: [`
@@ -104,34 +139,40 @@ import { CodingChallenge } from '../../../coding-challenge.model';
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      padding-bottom: 8px;
+      padding-bottom: 6px;
     }
     
     .display-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 12px;
+      padding: 2px 8px;
       background-color: rgba(0, 0, 0, 0.2);
       border-bottom: 2px solid #333;
     }
     
     .challenge-title {
       font-family: 'Press Start 2P', cursive;
-      font-size: 0.85rem;
+      font-size: 0.7rem;
       margin: 0;
       color: #333;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .challenge-badges {
       display: flex;
-      gap: 8px;
+      gap: 6px;
+      flex-shrink: 0;
+      margin-left: 8px;
     }
     
     .difficulty-badge,
     .language-badge {
-      font-size: 0.7rem;
-      padding: 3px 6px;
+      font-size: 0.6rem;
+      padding: 2px 5px;
       border-radius: 3px;
       background-color: var(--color-tamagotchi-btn);
       color: #333;
@@ -139,53 +180,108 @@ import { CodingChallenge } from '../../../coding-challenge.model';
       border: 1px solid #333;
     }
     
+    .language-selector {
+      padding: 2px 6px;
+      border-bottom: 1px dotted #333;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .selector-title {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      margin: 0 8px 0 0;
+      color: #333;
+      flex-shrink: 0;
+    }
+    
+    .language-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      justify-content: flex-start;
+      flex: 1;
+    }
+    
+    .language-button {
+      background-color: rgba(255, 255, 255, 0.5);
+      border: 1px solid #333;
+      border-radius: 3px;
+      padding: 2px 5px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.55rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex: 0 0 auto;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.7);
+        transform: translateY(-2px);
+      }
+      
+      &.active {
+        background-color: #333;
+        color: var(--color-tamagotchi-screen);
+      }
+    }
+    
     .challenge-description-box {
-      padding: 8px 14px;
-      margin: 8px;
+      padding: 4px 8px;
+      margin: 2px 6px 4px;
       background-color: rgba(255, 255, 255, 0.5);
       border: 1px dashed #333;
       border-radius: 4px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      min-height: 32px;
+      max-height: 54px;
+      overflow-y: auto;
     }
     
     .description-text {
       margin: 0;
-      font-size: 0.9rem;
+      font-size: 0.75rem;
       color: #333;
-      line-height: 1.4;
+      line-height: 1.2;
+      flex: 1;
+      overflow-y: auto;
     }
     
     .xp-reward {
       font-family: 'Press Start 2P', cursive;
-      font-size: 0.7rem;
+      font-size: 0.6rem;
       color: #333;
       white-space: nowrap;
       display: flex;
       align-items: center;
-      padding: 3px 8px;
+      padding: 2px 6px;
       background-color: rgba(255, 255, 255, 0.5);
       border-radius: 3px;
-      margin-left: 12px;
+      margin-left: 8px;
       border: 1px solid #333;
+      flex-shrink: 0;
     }
     
     .challenge-content {
       flex: 1;
       display: flex;
-      gap: 8px;
-      padding: 0 8px 8px;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0 6px 6px;
       overflow: hidden;
-      height: 100%;
+      height: calc(100% - 100px);
     }
     
     .code-sections {
-      flex: 1;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      gap: 8px;
+      flex: 1;
       overflow: hidden;
-      height: 100%;
+      min-height: 65%;
     }
     
     .code-problem,
@@ -196,24 +292,25 @@ import { CodingChallenge } from '../../../coding-challenge.model';
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      flex: 1;
+      min-height: 100%;
     }
     
     .code-problem {
-      flex: 1;
-      margin-bottom: 8px;
+      flex: 0.9;
     }
     
     .code-solution {
-      flex: 1.5;
+      flex: 1.1;
       position: relative;
     }
     
     .pixel-panel-header {
-      padding: 4px 8px;
+      padding: 3px 6px;
       background-color: #333;
       color: var(--color-tamagotchi-screen);
       font-family: 'Press Start 2P', cursive;
-      font-size: 0.65rem;
+      font-size: 0.6rem;
     }
     
     .panel-title {
@@ -225,13 +322,17 @@ import { CodingChallenge } from '../../../coding-challenge.model';
       margin: 0;
       padding: 8px;
       font-family: 'VT323', monospace;
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       background-color: rgba(0, 0, 0, 0.8);
       color: #33ff00;
       border: none;
       border-radius: 0;
       overflow: auto;
       line-height: 1.4;
+      height: 100%;
+      max-height: 100%;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     
     .code-textarea {
@@ -241,73 +342,13 @@ import { CodingChallenge } from '../../../coding-challenge.model';
       margin: 0;
       padding: 8px;
       font-family: 'VT323', monospace;
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       background-color: rgba(0, 0, 0, 0.8);
       color: #33ff00;
       border: none;
       outline: none;
       line-height: 1.4;
-    }
-    
-    .test-panel {
-      width: 33%;
-      display: flex;
-      flex-direction: column;
-      background-color: rgba(255, 255, 255, 0.3);
-      border: 1px solid #333;
-      border-radius: 3px;
-      overflow: hidden;
-      justify-content: space-between;
-    }
-    
-    .test-cases-container {
-      flex: 1;
-      padding: 3px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      max-height: calc(100% - 70px);
-    }
-    
-    .test-case {
-      background-color: rgba(255, 255, 255, 0.2);
-      border: 1px solid #333;
-      border-radius: 3px;
-      margin-bottom: 3px;
-      padding: 3px;
-    }
-    
-    .test-input,
-    .test-output {
-      display: flex;
-      align-items: center;
-      margin-bottom: 3px;
-    }
-    
-    .test-label {
-      font-family: 'Press Start 2P', cursive;
-      font-size: 0.6rem;
-      margin-right: 5px;
-      color: #333;
-      width: 32px;
-    }
-    
-    .test-code {
-      font-family: 'VT323', monospace;
-      font-size: 0.9rem;
-      color: #333;
-      background-color: rgba(255, 255, 255, 0.5);
-      padding: 2px 4px;
-      border-radius: 2px;
-      display: inline-block;
-      word-break: break-all;
-    }
-    
-    .test-actions {
-      padding: 3px;
-      border-top: 1px dashed #333;
-      margin-top: auto;
+      white-space: pre-wrap;
     }
     
     .result-message {
@@ -315,105 +356,305 @@ import { CodingChallenge } from '../../../coding-challenge.model';
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 2px 4px;
-      font-size: 0.7rem;
+      padding: 6px;
       text-align: center;
-      z-index: 10;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      
+      &.success {
+        background-color: rgba(0, 255, 0, 0.3);
+        color: #006400;
+      }
+      
+      &.error {
+        background-color: rgba(255, 0, 0, 0.3);
+        color: #8b0000;
+      }
+      
+      .result-icon {
+        font-size: 0.85rem;
+      }
     }
     
-    .result-icon {
-      font-weight: bold;
-      margin-right: 3px;
+    .test-panel {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 140px;
+      max-height: 35%;
     }
     
-    .success {
-      background-color: rgba(99, 255, 132, 0.8);
-      border-top: 1px solid #28a745;
-      color: #1e7e34;
+    .test-cases-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      background-color: rgba(255, 255, 255, 0.3);
+      border-left: 1px solid #333;
+      border-right: 1px solid #333;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-content: flex-start;
     }
     
-    .error {
-      background-color: rgba(255, 99, 132, 0.8);
-      border-top: 1px solid #dc3545;
-      color: #dc3545;
+    .test-case {
+      flex: 1 1 45%;
+      min-width: 180px;
+      margin-bottom: 0;
+      padding: 8px;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .test-input,
+    .test-output {
+      margin-bottom: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .test-output {
+      margin-bottom: 0;
+    }
+    
+    .test-label {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.55rem;
+      margin-right: 8px;
+      color: #333;
+      display: inline-block;
+      flex-shrink: 0;
+      min-width: 24px;
+    }
+    
+    .test-code {
+      font-family: 'VT323', monospace;
+      font-size: 0.85rem;
+      background-color: rgba(0, 0, 0, 0.1);
+      padding: 2px 4px;
+      border-radius: 2px;
+      flex: 1;
+      overflow: hidden;
+      word-break: break-all;
+      white-space: pre-wrap;
+      max-height: 60px;
+      overflow-y: auto;
+      margin: 0;
+    }
+    
+    .test-actions {
+      padding: 6px;
+      background-color: rgba(255, 255, 255, 0.3);
+      border: 1px solid #333;
+      border-top: none;
+      border-bottom-left-radius: 3px;
+      border-bottom-right-radius: 3px;
     }
     
     .action-buttons {
       display: flex;
       justify-content: space-between;
+      gap: 5px;
     }
     
     .pixel-button {
-      padding: 2px 5px;
-      border-radius: 3px;
       font-family: 'Press Start 2P', cursive;
-      font-size: 0.5rem;
-      border: 1px solid #333;
+      font-size: 0.55rem;
+      padding: 4px 6px;
+      background-color: var(--color-tamagotchi-btn);
+      border: 2px solid #333;
+      border-radius: 3px;
       cursor: pointer;
-      transition: all 0.1s ease;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      flex: 1;
+      text-align: center;
       
       &:hover {
-        transform: translateY(-1px);
+        transform: translateY(-2px);
       }
       
       &:active {
-        transform: translateY(1px);
+        transform: translateY(0);
       }
     }
     
     .check-btn {
-      background-color: var(--color-tamagotchi-btn);
-      color: #333;
-      box-shadow: 0 1px 0 #d9a400;
-      
-      &:active {
-        box-shadow: 0 0 0 #d9a400;
-      }
+      background-color: rgba(0, 255, 0, 0.3);
     }
     
     .next-btn {
-      background-color: #36a9e1;
-      color: white;
-      box-shadow: 0 1px 0 #1e88c9;
+      background-color: rgba(0, 0, 255, 0.2);
+    }
+    
+    .no-challenge {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+    }
+    
+    .message {
+      text-align: center;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.7rem;
+      color: #333;
+      line-height: 1.5;
       
-      &:active {
-        box-shadow: 0 0 0 #1e88c9;
+      p {
+        margin: 8px 0;
       }
     }
     
-    .bg-success {
-      background-color: #33cc33 !important;
+    .loading-container {
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--color-tamagotchi-screen-bg);
+      border: 2px solid #333;
+      border-radius: 6px;
     }
     
-    .bg-warning {
-      background-color: #ff9900 !important;
+    .loading-message {
+      text-align: center;
+      
+      p {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 0.8rem;
+        color: #333;
+        margin-top: 12px;
+      }
     }
     
-    .bg-danger {
-      background-color: #ff3333 !important;
+    .pixel-spinner {
+      width: 32px;
+      height: 32px;
+      margin: 0 auto;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-left: 3px solid #333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
     
-    @media (max-height: 700px) {
-      .description-text {
-        font-size: 0.6rem;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive styles */
+    @media (min-width: 1200px) {
+      .language-buttons {
+        justify-content: flex-start;
       }
       
-      .challenge-description-box {
-        padding: 2px 5px;
+      .code-block, 
+      .code-textarea {
+        font-size: 1.05rem;
       }
       
-      .code-block, .code-textarea {
-        font-size: 0.7rem;
-      }
-      
-      .test-case {
-        padding: 2px;
-        margin-bottom: 2px;
+      .test-panel {
+        min-height: 160px;
       }
       
       .test-code {
-        font-size: 0.6rem;
+        font-size: 0.9rem;
+        max-height: 70px;
       }
+      
+      .pixel-button {
+        font-size: 0.6rem;
+        padding: 5px 8px;
+      }
+    }
+    
+    @media (min-width: 1600px) {
+      .challenge-title {
+        font-size: 0.85rem;
+      }
+      
+      .description-text {
+        font-size: 0.9rem;
+      }
+      
+      .language-button {
+        font-size: 0.65rem;
+        padding: 5px 10px;
+      }
+      
+      .code-block, 
+      .code-textarea {
+        font-size: 1.1rem;
+      }
+      
+      .test-code {
+        font-size: 0.95rem;
+      }
+    }
+    
+    @media (max-width: 992px) {
+      .code-sections {
+        flex-direction: column;
+      }
+      
+      .code-problem,
+      .code-solution {
+        max-height: none;
+        min-height: 150px;
+      }
+      
+      .test-panel {
+        width: 100%;
+        max-width: 100%;
+        min-height: 140px;
+      }
+      
+      .test-case {
+        flex: 1 1 100%;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .challenge-content {
+        height: auto;
+      }
+      
+      .code-sections {
+        flex-direction: column;
+        margin-bottom: 8px;
+      }
+      
+      .code-problem,
+      .code-solution {
+        min-height: 120px;
+      }
+      
+      .test-panel {
+        max-height: none;
+      }
+      
+      .test-cases-container {
+        max-height: 200px;
+      }
+    }
+    
+    /* Doboz a tesztpanelen a teszteseteknek, hogy jobban kiemelkedjenek */
+    .test-panel .pixel-panel-header {
+      border-top-left-radius: 3px;
+      border-top-right-radius: 3px;
+    }
+    
+    .test-panel .test-actions {
+      border-bottom-left-radius: 3px;
+      border-bottom-right-radius: 3px;
     }
   `]
 })
@@ -422,51 +663,122 @@ export class CodingChallengeComponent implements OnInit {
   userSolution: string = '';
   showSuccess: boolean = false;
   showError: boolean = false;
-
+  isLoading: boolean = false;
+  availableLanguages: CodingLanguage[] = [];
+  selectedLanguage: CodingLanguage = 'python';
+  
   constructor(
     private challengesService: CodingChallengesService,
-    private tamagocsiService: TamagocsiService
+    private tamagocsiService: TamagocsiService,
+    private languagePreference: LanguagePreferenceService
   ) {}
-
+  
   ngOnInit(): void {
-    this.getNewChallenge();
-  }
-
-  getNewChallenge(): void {
-    this.challengesService.getRandomChallenge().subscribe(challenge => {
-      this.currentChallenge = challenge;
-      this.userSolution = '';
-      this.showSuccess = false;
-      this.showError = false;
+    this.isLoading = true;
+    
+    // Figyeljük a betöltési állapotot
+    this.challengesService.loading$.subscribe(isLoading => {
+      this.isLoading = isLoading;
     });
+    
+    // Figyeljük a kiválasztott nyelvet
+    this.languagePreference.selectedLanguage$.subscribe(language => {
+      this.selectedLanguage = language;
+    });
+    
+    // Figyeljük az aktuális feladatot
+    this.challengesService.currentChallenge$.subscribe(challenge => {
+      this.currentChallenge = challenge;
+      if (challenge) {
+        this.userSolution = '';
+        this.showSuccess = false;
+        this.showError = false;
+      }
+    });
+    
+    // Betöltjük az elérhető nyelveket
+    setTimeout(() => {
+      this.availableLanguages = this.challengesService.getAvailableLanguages();
+      this.isLoading = false;
+    }, 1000);
   }
-
+  
+  getNewChallenge(): void {
+    this.isLoading = true;
+    this.userSolution = '';
+    this.showSuccess = false;
+    this.showError = false;
+    
+    this.challengesService.getRandomChallenge()
+      .subscribe(() => {
+        this.isLoading = false;
+      });
+  }
+  
   submitSolution(): void {
-    if (!this.currentChallenge) return;
-
+    if (!this.currentChallenge || !this.userSolution.trim()) return;
+    
     const isCorrect = this.challengesService.validateSolution(
       this.currentChallenge,
       this.userSolution
     );
-
+    
     if (isCorrect) {
       this.showSuccess = true;
       this.showError = false;
+      
+      // Adjunk XP-t a tamagocsinak
       this.tamagocsiService.addExperience(this.currentChallenge.experienceReward);
+      
+      // 3 mp múlva új feladat
+      setTimeout(() => {
+        this.getNewChallenge();
+      }, 3000);
     } else {
-      this.showSuccess = false;
       this.showError = true;
+      this.showSuccess = false;
+      
+      // 2 mp múlva eltűnik a hibaüzenet
+      setTimeout(() => {
+        this.showError = false;
+      }, 2000);
     }
   }
   
+  selectLanguage(language: CodingLanguage): void {
+    this.languagePreference.setLanguage(language);
+  }
+  
   getDifficultyClass(): string {
-    if (!this.currentChallenge) return 'bg-secondary';
+    if (!this.currentChallenge) return '';
     
-    switch(this.currentChallenge.difficulty.toLowerCase()) {
-      case 'easy': return 'bg-success';
-      case 'medium': return 'bg-warning';
-      case 'hard': return 'bg-danger';
-      default: return 'bg-secondary';
+    switch (this.currentChallenge.difficulty) {
+      case 'easy': return 'easy';
+      case 'medium': return 'medium';
+      case 'hard': return 'hard';
+      default: return '';
+    }
+  }
+  
+  getLanguageName(language: CodingLanguage): string {
+    switch (language) {
+      case 'python': return 'Python';
+      case 'javascript': return 'JavaScript';
+      case 'java': return 'Java';
+      case 'cpp': return 'C++';
+      case 'csharp': return 'C#';
+      default: return language;
+    }
+  }
+  
+  getLanguageEmoji(language: CodingLanguage): string {
+    switch (language) {
+      case 'python': return '🐍';
+      case 'javascript': return '📜';
+      case 'java': return '☕';
+      case 'cpp': return '🔍';
+      case 'csharp': return '🎯';
+      default: return '💻';
     }
   }
 }
